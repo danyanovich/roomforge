@@ -1,0 +1,214 @@
+[
+    {
+        "id": 1,
+        "roomName": "Гостиная",
+        "dimensions": {
+            "width_m": 6,
+            "depth_m": 5,
+            "height_m": 3
+        },
+        "area_m2": 30,
+        "camera": {
+            "position": "center",
+            "height_m": 1.6,
+            "facing": "north"
+        },
+        "neighbors": [
+            {
+                "roomId": 2,
+                "doorWall": "east"
+            }
+        ],
+        "furniture": [
+            {
+                "type": "sofa",
+                "shape": "L",
+                "position": [
+                    2,
+                    0,
+                    1
+                ],
+                "color": "#a8a09a"
+            },
+            {
+                "type": "coffee_table",
+                "shape": "rect",
+                "position": [
+                    2.5,
+                    0,
+                    2.5
+                ]
+            }
+        ],
+        "hotspots": [
+            {
+                "id": "h1",
+                "label": "Угловой диван",
+                "position": [
+                    2,
+                    1.6,
+                    1
+                ],
+                "action": "info"
+            },
+            {
+                "id": "h2",
+                "label": "Перейти на кухню",
+                "position": [
+                    5.5,
+                    1.6,
+                    2.5
+                ],
+                "action": "navigate",
+                "targetRoomId": 2
+            }
+        ],
+        "panoramaUrl": "/renders/living-room-360.png",
+        "style_override": null
+    },
+    {
+        "id": 2,
+        "roomName": "Кухня",
+        "dimensions": {
+            "width_m": 5,
+            "depth_m": 4,
+            "height_m": 3
+        },
+        "area_m2": 20,
+        "camera": {
+            "position": "center",
+            "height_m": 1.6,
+            "facing": "west"
+        },
+        "neighbors": [
+            {
+                "roomId": 1,
+                "doorWall": "west"
+            }
+        ],
+        "furniture": [
+            {
+                "type": "island",
+                "shape": "rect",
+                "position": [
+                    2.5,
+                    0,
+                    2
+                ]
+            },
+            {
+                "type": "stools",
+                "shape": "cylinder",
+                "position": [
+                    2.5,
+                    0.4,
+                    2.5
+                ]
+            }
+        ],
+        "hotspots": [
+            {
+                "id": "h2",
+                "label": "Вернуться в гостиную",
+                "position": [
+                    0.5,
+                    1.6,
+                    2
+                ],
+                "action": "navigate",
+                "targetRoomId": 1
+            }
+        ],
+        "panoramaUrl": "/renders/kitchen-360.png",
+        "style_override": null
+    },
+    {
+        "id": 3,
+        "roomName": "Спальня",
+        "dimensions": {
+            "width_m": 4,
+            "depth_m": 4,
+            "height_m": 3
+        },
+        "area_m2": 16,
+        "camera": {
+            "position": "center",
+            "height_m": 1.6,
+            "facing": "south"
+        },
+        "neighbors": [],
+        "furniture": [
+            {
+                "type": "bed",
+                "shape": "rect",
+                "position": [
+                    2,
+                    0,
+                    2
+                ]
+            }
+        ],
+        "panoramaUrl": "/renders/bedroom-360.png",
+        "style_override": null
+    },
+    {
+        "id": 4,
+        "roomName": "Детская",
+        "dimensions": {
+            "width_m": 4,
+            "depth_m": 3,
+            "height_m": 3
+        },
+        "area_m2": 12,
+        "camera": {
+            "position": "center",
+            "height_m": 1.6,
+            "facing": "east"
+        },
+        "neighbors": [],
+        "furniture": [
+            {
+                "type": "bed",
+                "shape": "house",
+                "position": [
+                    2,
+                    0,
+                    1
+                ]
+            }
+        ],
+        "panoramaUrl": "/renders/kids-360.png",
+        "style_override": {
+            "walls": "#c8dce8"
+        }
+    },
+    {
+        "id": 5,
+        "roomName": "Ванная",
+        "dimensions": {
+            "width_m": 3,
+            "depth_m": 2,
+            "height_m": 3
+        },
+        "area_m2": 6,
+        "camera": {
+            "position": "center",
+            "height_m": 1.6,
+            "facing": "north"
+        },
+        "neighbors": [],
+        "furniture": [
+            {
+                "type": "bathtub",
+                "shape": "rect",
+                "position": [
+                    1.5,
+                    0,
+                    1
+                ]
+            }
+        ],
+        "panoramaUrl": "/renders/bathroom-360.png",
+        "style_override": null
+    }
+]
