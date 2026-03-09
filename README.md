@@ -58,7 +58,22 @@ Most room planners force a tradeoff between technical floor-plan editing and vis
 ## How to run
 
 ```bash
-npm install
+npm start
+```
+
+`npm start` is the recommended local entrypoint. It will:
+
+- install dependencies automatically if they are missing
+- start the Vite dev server
+- wait until the app is reachable
+- open RoomForge in your default browser
+
+You still need `Node.js` and `npm` installed locally. This is a one-command local launch, not a standalone packaged app.
+
+Advanced / developer-only flow:
+
+```bash
+npm run setup
 npm run dev
 ```
 

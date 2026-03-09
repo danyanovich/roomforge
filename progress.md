@@ -37,3 +37,19 @@ Updated TODO / handoff:
 - Add stable selectors and viewport-aware controls so Playwright can exercise the isometric and 3D modes without relying on coordinate guesses.
 - Deepen the hybrid wall editing model beyond rectangular room resizing if manual non-rectilinear wall shaping becomes a hard requirement.
 - Replace procedural/local placeholder asset keys with true local GLTF hero assets for more of the catalog if visual fidelity becomes the next priority.
+
+- 2026-03-09: Added global light/dark theme state with system-default detection, manual toggle, and `localStorage` persistence under `roomforge.theme`. The app now updates `documentElement` color-scheme and `body` background/text when theme changes.
+- 2026-03-09: Reworked visual tokens in `src/index.css` to use theme-aware CSS variables with higher text contrast, less washout, stronger active states, more visible swatch rings, and darker/clearer floating badges.
+- 2026-03-09: Expanded `STYLE_PRESETS` in `src/data/plannerData.js` to carry distinct `light` and `dark` scene palettes, and updated `getSceneConfig(variant, themeMode)` so 2D/3D scenes follow the selected theme while keeping preset identity.
+- 2026-03-09: Updated 3D item highlight and scene material accents to pull from the active palette instead of fixed light-only colors.
+- 2026-03-09: Verified `npm run build` passes after the theme overhaul. Vite still reports the pre-existing `three-mesh-bvh` / `BatchedMesh` warning and large bundle warning.
+- 2026-03-09: Ran the required Playwright web-game client against `http://127.0.0.1:5173` and captured fresh state artifacts under `output/theme-light/`. The text-state smoke test passed. A subsequent full-page Playwright run hit a local Chromium WebGL-context limitation in this environment, so end-to-end visual page screenshots for the R3F scene could not be fully validated headlessly.
+
+Updated TODO / handoff:
+- Add stable theme-toggle test selectors so Playwright can switch themes without coordinate guessing.
+- If automated full-page screenshots are needed in CI, add a fallback scene/error boundary or a software-rendering strategy for environments where Chromium cannot create a WebGL context.
+
+- 2026-03-09: Added one-command local bootstrap via `npm start`. New `scripts/start.mjs` now checks for required dependencies, runs `npm install` when needed, starts Vite, waits for the real local URL, and auto-opens the browser unless `ROOMFORGE_NO_OPEN=1` is set.
+- 2026-03-09: Added `npm run setup` as an explicit install helper and updated `README.md` so `npm start` is the primary local run path while `npm run dev` remains the lower-level developer flow.
+- 2026-03-09: Verified `npm start` works with existing dependencies, prints the reachable URL, and leaves no lingering Vite/bootstrap processes after `Ctrl+C`.
+- 2026-03-09: Verified the occupied-port case by keeping `5173` busy and starting the bootstrap script in parallel. The script correctly waited for Vite's announced fallback URL and reported `http://127.0.0.1:5174/` instead of attaching to the already-running server.

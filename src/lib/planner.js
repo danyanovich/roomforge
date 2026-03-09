@@ -49,8 +49,8 @@ export function getItemFootprint(item) {
   return { width, depth, height: variant.size[1] };
 }
 
-export function getSceneConfig(variant) {
-  const style = getStylePreset(variant.stylePresetId);
+export function getSceneConfig(variant, themeMode = 'light') {
+  const style = getStylePreset(variant.stylePresetId, themeMode);
   const lighting = getLightingScenario(variant.lightingScenarioId);
   return { style, lighting };
 }

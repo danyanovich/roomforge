@@ -88,7 +88,7 @@ function RoomWall({ room, wall, color, hiddenWall, onSelectWall, active }) {
   );
 }
 
-function ItemMesh({ item, room, selected, dragging, onSelectItem, onStartDrag, viewMode }) {
+function ItemMesh({ item, room, palette, selected, dragging, onSelectItem, onStartDrag }) {
   const groupRef = useRef(null);
   const footprint = getItemFootprint(item);
   const variant = getItemVariant(item);
@@ -112,7 +112,7 @@ function ItemMesh({ item, room, selected, dragging, onSelectItem, onStartDrag, v
   const color = item.color;
   const family = item.family;
   const geometryKey = variant?.geometryKey ?? family;
-  const mainMaterialProps = { color, roughness: 0.84, emissive: selected ? '#f4d37d' : '#000000', emissiveIntensity: selected ? 0.25 : 0 };
+  const mainMaterialProps = { color, roughness: 0.84, emissive: selected ? palette.highlight : '#000000', emissiveIntensity: selected ? 0.28 : 0 };
   const accentMaterialProps = { color: '#6f5948', roughness: 0.82 };
 
   const material = <meshStandardMaterial {...mainMaterialProps} />;
@@ -300,7 +300,7 @@ function ItemMesh({ item, room, selected, dragging, onSelectItem, onStartDrag, v
           {material}
         </RoundedBox>
         <RoundedBox args={[footprint.width * 0.94, footprint.height * 0.12, footprint.depth * 0.92]} radius={0.04} smoothness={4} position={[0, -footprint.height * 0.02, 0]}>
-          <meshStandardMaterial color="#efe6db" roughness={0.96} />
+          <meshStandardMaterial color={palette.ceiling} roughness={0.96} />
         </RoundedBox>
         {geometryKey !== 'bed-low' && (
           <RoundedBox args={[footprint.width, footprint.height * (geometryKey === 'bed-sleigh' ? 0.34 : 0.28), footprint.depth * 0.08]} radius={0.04} smoothness={4} position={[0, footprint.height * 0.12, -footprint.depth * 0.46]}>
@@ -381,7 +381,7 @@ function ItemMesh({ item, room, selected, dragging, onSelectItem, onStartDrag, v
         {(geometryKey.startsWith('shelf-') || geometryKey.includes('fluted') || geometryKey.includes('open')) && (
           <mesh position={[0, 0, 0]}>
             <boxGeometry args={[footprint.width * 0.92, bodyHeight * 0.82, footprint.depth * 0.86]} />
-            <meshStandardMaterial color="#efe5d8" roughness={0.94} />
+            <meshStandardMaterial color={palette.ceiling} roughness={0.94} />
           </mesh>
         )}
       </group>
@@ -397,12 +397,12 @@ function ItemMesh({ item, room, selected, dragging, onSelectItem, onStartDrag, v
           ) : (
             <boxGeometry args={[footprint.width, footprint.height, Math.max(0.03, footprint.depth)]} />
           )}
-          <meshStandardMaterial color="#d8e0ea" metalness={0.25} roughness={0.24} />
+          <meshStandardMaterial color={palette.panelSoft} metalness={0.25} roughness={0.24} />
         </mesh>
         {geometryKey === 'mirror-backlit' && (
           <mesh scale={[1.08, 1.08, 1.4]}>
             <boxGeometry args={[footprint.width, footprint.height, Math.max(0.02, footprint.depth)]} />
-            <meshStandardMaterial color="#f7dca6" transparent opacity={0.28} />
+            <meshStandardMaterial color={palette.highlight} transparent opacity={0.24} />
           </mesh>
         )}
       </group>
@@ -490,11 +490,11 @@ function RoomMesh({ room, palette, selection, onSelectRoom, onSelectItem, onSele
           key={item.id}
           item={item}
           room={room}
+          palette={palette}
           selected={selection?.kind === 'item' && selection.itemId === item.id}
           dragging={draggingItemId === item.id}
           onSelectItem={onSelectItem}
           onStartDrag={onStartDrag}
-          viewMode={mode}
         />
       ))}
     </group>
