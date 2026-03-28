@@ -31,6 +31,10 @@ function fromPointer(event, bounds) {
   };
 }
 
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
 function drawGrid(width, height) {
   const lines = [];
   for (let x = PADDING; x <= width - PADDING; x += CELL_SIZE) {
@@ -61,6 +65,8 @@ const Planner2D = forwardRef(function Planner2D(
     onResizeRoom,
     onAddItem,
     activeRoomId,
+    pendingPlacement,
+    onCommitPlacement,
     readOnly = false,
   },
   ref
@@ -202,6 +208,14 @@ const Planner2D = forwardRef(function Planner2D(
                 onPointerDown={(event) => {
                   event.stopPropagation();
                   onSelectRoom(room.id);
+                  if (readOnly || !pendingPlacement) {
+                    return;
+                  }
+                  const point = fromPointer(event, svgRef.current);
+                  const localX = clamp(point.x - room.x, 0.8, room.width - 0.8);
+                  const localZ = clamp(point.z - room.z, 0.8, room.depth - 0.8);
+                  onAddItem(room.id, pendingPlacement.catalogId, pendingPlacement.tier, localX, localZ);
+                  onCommitPlacement?.();
                 }}
               />
               {!readOnly && (
