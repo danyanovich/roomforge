@@ -14,6 +14,7 @@ import {
 } from './data/plannerData';
 import {
   addItemToRoom,
+  addRoomFromWall,
   createInitialState,
   deleteSelectedItem,
   duplicateSelectedItem,
@@ -26,6 +27,7 @@ import {
   getVariant,
   moveItem,
   recolorSelectedItem,
+  renameRoom,
   replaceSelectedItem,
   resizeRoom,
   rotateSelectedItem,
@@ -119,7 +121,7 @@ function SegmentButton({ active, onClick, children }) {
   );
 }
 
-function LibraryCard({ item, accentColor, onAddQuick }) {
+function LibraryCard({ item, accentColor, onAddQuick, onEnablePlacement, placementActive }) {
   const baseColor = accentColor ?? item.defaultColor;
   const previewVariant = item.variants.find((variant) => variant.tier === 'Standard') ?? item.variants[0];
   return (
@@ -134,9 +136,14 @@ function LibraryCard({ item, accentColor, onAddQuick }) {
       <div className="library-card-body">
         <strong>{item.label}</strong>
         <small>{item.categoryLabel}</small>
-        <button type="button" className="ghost-button" onClick={() => onAddQuick(item.id)}>
-          Add to room
-        </button>
+        <div className="button-row">
+          <button type="button" className="ghost-button" onClick={() => onAddQuick(item.id)}>
+            Add
+          </button>
+          <button type="button" className={`ghost-button ${placementActive ? 'active' : ''}`} onClick={() => onEnablePlacement(item.id)}>
+            Place
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -165,7 +172,11 @@ function ScenePane({
   onMoveItem,
   onResizeRoom,
   onAddItem,
+  onAddRoomFromWall,
   activeRoomId,
+  pendingPlacement,
+  onCommitPlacement,
+  showRoomMeta,
   sceneRef,
   readOnly,
 }) {
@@ -191,7 +202,11 @@ function ScenePane({
             onMoveItem={onMoveItem}
             onResizeRoom={onResizeRoom}
             onAddItem={onAddItem}
+            onAddRoomFromWall={onAddRoomFromWall}
             activeRoomId={activeRoomId}
+            pendingPlacement={pendingPlacement}
+            onCommitPlacement={onCommitPlacement}
+            showRoomMeta={showRoomMeta}
             readOnly={readOnly}
           />
         ) : (
@@ -217,6 +232,12 @@ function ScenePane({
 
 export default function App() {
   const [state, setState] = useState(() => createInitialState());
+  const [mobileTab, setMobileTab] = useState('project');
+  const [isMobileLayout, setIsMobileLayout] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 1180px)').matches : false
+  );
+  const [pendingPlacement, setPendingPlacement] = useState(null);
+  const [showRoomMeta, setShowRoomMeta] = useState(true);
   const [themeMode, setThemeMode] = useState(getInitialThemeMode);
   const [hasExplicitTheme, setHasExplicitTheme] = useState(() => {
     if (typeof window === 'undefined') {
@@ -241,6 +262,14 @@ export default function App() {
   const selectionStats = useMemo(() => getSelectionStats(activeVariant, state.selection), [activeVariant, state.selection]);
   const projectSummary = useMemo(() => getProjectSummary(state.project, state.activeVariantId), [state.activeVariantId, state.project]);
   const uiTheme = UI_THEME_TOKENS[themeMode];
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 1180px)');
+    const applyLayout = (event) => setIsMobileLayout(event.matches);
+    applyLayout(mediaQuery);
+    mediaQuery.addEventListener('change', applyLayout);
+    return () => mediaQuery.removeEventListener('change', applyLayout);
+  }, []);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -298,7 +327,12 @@ export default function App() {
   const updateState = (updater) => setState((current) => updater(current));
 
   const handleSelectRoom = (roomId) => setState((current) => ({ ...current, selection: { kind: 'room', roomId } }));
-  const handleSelectItem = (roomId, itemId) => setState((current) => ({ ...current, selection: { kind: 'item', roomId, itemId } }));
+  const handleSelectItem = (roomId, itemId) => {
+    setState((current) => ({ ...current, selection: { kind: 'item', roomId, itemId } }));
+    if (isMobileLayout) {
+      setMobileTab('inspector');
+    }
+  };
   const handleSelectWall = (roomId, wall) => setState((current) => ({ ...current, selection: { kind: 'wall', roomId, wall } }));
 
   const addQuickItem = (catalogId) => {
@@ -345,8 +379,8 @@ export default function App() {
         '--scene-highlight': sceneConfig.style.palette.highlight,
       }}
     >
-      <aside className="left-rail">
-        <div className="panel">
+      <aside className={`left-rail ${isMobileLayout && mobileTab === 'inspector' ? 'mobile-hidden' : ''}`}>
+        <div className={`panel ${isMobileLayout && mobileTab === 'library' ? 'mobile-hidden' : ''}`}>
           <div className="panel-header">
             <span>Theme</span>
           </div>
@@ -366,7 +400,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className="panel hero-panel">
+        <div className={`panel hero-panel ${isMobileLayout ? 'mobile-hidden' : ''}`}>
           <p className="eyebrow">RoomForge Demo</p>
           <h1>Plan, swap, refine.</h1>
           <p className="lede">
@@ -374,7 +408,7 @@ export default function App() {
           </p>
         </div>
 
-        <div className="panel">
+        <div className={`panel ${isMobileLayout && mobileTab === 'library' ? 'mobile-hidden' : ''}`}>
           <div className="panel-header">
             <span>Project Type</span>
           </div>
@@ -411,7 +445,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className="panel">
+        <div className={`panel ${isMobileLayout && mobileTab === 'library' ? 'mobile-hidden' : ''}`}>
           <div className="panel-header">
             <span>View Mode</span>
           </div>
@@ -424,7 +458,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className="panel">
+        <div className={`panel ${isMobileLayout && mobileTab === 'library' ? 'mobile-hidden' : ''}`}>
           <div className="panel-header">
             <span>Floors</span>
           </div>
@@ -474,10 +508,10 @@ export default function App() {
           </div>
         </div>
 
-        <div className="panel catalog-panel">
+        <div className={`panel catalog-panel ${isMobileLayout && mobileTab !== 'library' ? 'mobile-hidden' : ''}`}>
           <div className="panel-header">
             <span>Furniture Library</span>
-            <small>Drag into the 2D scene</small>
+            <small>Tap “Place” for mobile</small>
           </div>
           <div className="catalog-categories">
             {CATALOG_CATEGORIES.map((category) => (
@@ -493,7 +527,19 @@ export default function App() {
           </div>
           <div className="library-list">
             {filteredCatalog.map((item) => (
-              <LibraryCard key={item.id} item={item} accentColor={activeItem?.color} onAddQuick={addQuickItem} />
+              <LibraryCard
+                key={item.id}
+                item={item}
+                accentColor={activeItem?.color}
+                onAddQuick={addQuickItem}
+                onEnablePlacement={(catalogId) => {
+                  setPendingPlacement({ catalogId, tier: 'Standard' });
+                  if (isMobileLayout) {
+                    setMobileTab('project');
+                  }
+                }}
+                placementActive={pendingPlacement?.catalogId === item.id}
+              />
             ))}
           </div>
         </div>
@@ -513,17 +559,45 @@ export default function App() {
           onMoveItem={(roomId, itemId, x, z) => setState((current) => moveItem(current, roomId, itemId, x, z))}
           onResizeRoom={(roomId, nextRect) => setState((current) => resizeRoom(current, roomId, nextRect))}
           onAddItem={(roomId, catalogId, tier, x, z) => setState((current) => addItemToRoom(current, roomId, catalogId, tier, x, z))}
+          onAddRoomFromWall={(roomId, wall) =>
+            setState((current) => {
+              const beforeCount = getVariant(current.project, current.activeVariantId).floors.reduce((sum, floor) => sum + floor.rooms.length, 0);
+              const next = addRoomFromWall(current, roomId, wall);
+              const nextVariant = getVariant(next.project, next.activeVariantId);
+              const allRooms = nextVariant.floors.flatMap((floor) => floor.rooms);
+              if (allRooms.length === beforeCount) {
+                return next;
+              }
+              return { ...next, selection: { kind: 'room', roomId: allRooms.at(-1).id } };
+            })
+          }
           activeRoomId={state.selection?.roomId ?? activeFloor.rooms[0].id}
+          pendingPlacement={pendingPlacement}
+          onCommitPlacement={() => setPendingPlacement(null)}
+          showRoomMeta={showRoomMeta}
           sceneRef={null}
           readOnly={false}
         />
+        {pendingPlacement && state.activeViewMode === '2d' && (
+          <div className="mobile-placement-hint">
+            Placement mode active: tap a room in 2D to place item.
+            <button type="button" className="ghost-button" onClick={() => setPendingPlacement(null)}>
+              Cancel
+            </button>
+          </div>
+        )}
       </main>
 
-      <aside className="right-rail">
+      <aside className={`right-rail ${isMobileLayout && mobileTab !== 'inspector' ? 'mobile-hidden' : ''}`}>
         <div className="panel">
           <div className="panel-header">
             <span>Selection</span>
             <small>{state.selection?.kind ?? 'none'}</small>
+          </div>
+          <div className="button-row">
+            <button type="button" className={`ghost-button ${showRoomMeta ? 'active' : ''}`} onClick={() => setShowRoomMeta((value) => !value)}>
+              {showRoomMeta ? '👁️ Labels on' : '🙈 Labels off'}
+            </button>
           </div>
           <h3>{activeItem ? activeCatalogItem.label : activeRoom?.label ?? 'Nothing selected'}</h3>
           <p className="muted-copy">
@@ -629,6 +703,24 @@ export default function App() {
           </>
         )}
 
+        {!activeItem && activeRoom && (
+          <div className="panel">
+            <div className="panel-header">
+              <span>Room</span>
+              <small>Edit</small>
+            </div>
+            <label className="field-label" htmlFor="room-name-input">
+              Room name
+            </label>
+            <input
+              id="room-name-input"
+              className="text-input"
+              value={activeRoom.label}
+              onChange={(event) => setState((current) => renameRoom(current, activeRoom.id, event.target.value))}
+            />
+          </div>
+        )}
+
         <div className="panel">
           <div className="panel-header">
             <span>Layout Validation</span>
@@ -652,6 +744,19 @@ export default function App() {
         </div>
 
       </aside>
+      {isMobileLayout && (
+        <nav className="mobile-tabs">
+          <button type="button" className={`pill ${mobileTab === 'project' ? 'active' : ''}`} onClick={() => setMobileTab('project')}>
+            Project
+          </button>
+          <button type="button" className={`pill ${mobileTab === 'library' ? 'active' : ''}`} onClick={() => setMobileTab('library')}>
+            Library
+          </button>
+          <button type="button" className={`pill ${mobileTab === 'inspector' ? 'active' : ''}`} onClick={() => setMobileTab('inspector')}>
+            Inspector
+          </button>
+        </nav>
+      )}
     </div>
   );
 }

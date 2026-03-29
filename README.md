@@ -83,6 +83,12 @@ Build for production:
 npm run build
 ```
 
+Run the validation pipeline (lint + production build):
+
+```bash
+npm test
+```
+
 ## Demo deployment
 
 The project is Vite-based and ready for Vercel deployment. The included [`vercel.json`](./vercel.json) routes all requests to the SPA entry.

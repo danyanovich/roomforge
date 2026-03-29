@@ -1,6 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { CATALOG_BY_ID, getRoomArea } from '../data/plannerData';
-import { getItemFootprint } from '../lib/planner';
+import { evaluateItemPlacement, getItemFootprint } from '../lib/planner';
 
 const CELL_SIZE = 56;
 const PADDING = 56;
@@ -31,6 +31,10 @@ function fromPointer(event, bounds) {
   };
 }
 
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
 function drawGrid(width, height) {
   const lines = [];
   for (let x = PADDING; x <= width - PADDING; x += CELL_SIZE) {
@@ -50,6 +54,31 @@ function itemRect(item) {
   };
 }
 
+function roomCollisionState(floor, roomId, candidateRect) {
+  const candidate = {
+    left: candidateRect.x,
+    right: candidateRect.x + candidateRect.width,
+    top: candidateRect.z,
+    bottom: candidateRect.z + candidateRect.depth,
+  };
+  const overlap = floor.rooms.some((room) => {
+    if (room.id === roomId) {
+      return false;
+    }
+    const other = {
+      left: room.x,
+      right: room.x + room.width,
+      top: room.z,
+      bottom: room.z + room.depth,
+    };
+    return candidate.left < other.right - 0.02 && candidate.right > other.left + 0.02 && candidate.top < other.bottom - 0.02 && candidate.bottom > other.top + 0.02;
+  });
+  return {
+    overlap,
+    valid: !overlap && candidateRect.x >= 0 && candidateRect.z >= 0 && candidateRect.width >= 2 && candidateRect.depth >= 2,
+  };
+}
+
 const Planner2D = forwardRef(function Planner2D(
   {
     floor,
@@ -60,7 +89,11 @@ const Planner2D = forwardRef(function Planner2D(
     onMoveItem,
     onResizeRoom,
     onAddItem,
+    onAddRoomFromWall,
     activeRoomId,
+    pendingPlacement,
+    onCommitPlacement,
+    showRoomMeta = true,
     readOnly = false,
   },
   ref
@@ -69,6 +102,8 @@ const Planner2D = forwardRef(function Planner2D(
   const wrapperRef = useRef(null);
   const [dragState, setDragState] = useState(null);
   const [dropPreview, setDropPreview] = useState(null);
+  const [itemPlacementPreview, setItemPlacementPreview] = useState(null);
+  const [roomPlacementPreview, setRoomPlacementPreview] = useState(null);
   const bounds = useMemo(() => getBounds(floor), [floor]);
 
   useImperativeHandle(ref, () => ({
@@ -108,7 +143,27 @@ const Planner2D = forwardRef(function Planner2D(
 
     const point = fromPointer(event, svgRef.current);
     if (dragState.kind === 'item') {
-      onMoveItem(dragState.roomId, dragState.itemId, point.x - dragState.offsetX, point.z - dragState.offsetZ);
+      const room = floor.rooms.find((entry) => entry.id === dragState.roomId);
+      if (!room) {
+        return;
+      }
+      const sourceItem = room.items.find((item) => item.id === dragState.itemId);
+      if (!sourceItem) {
+        return;
+      }
+      const candidate = {
+        ...sourceItem,
+        x: point.x - dragState.offsetX,
+        z: point.z - dragState.offsetZ,
+      };
+      const placement = evaluateItemPlacement(room, candidate, sourceItem.id);
+      setItemPlacementPreview({
+        roomId: room.id,
+        itemId: sourceItem.id,
+        x: candidate.x,
+        z: candidate.z,
+        valid: placement.valid,
+      });
       return;
     }
 
@@ -118,21 +173,25 @@ const Planner2D = forwardRef(function Planner2D(
     }
 
     if (dragState.kind === 'room-move') {
-      onResizeRoom(room.id, {
+      const candidateRect = {
         x: Math.max(0, Math.round(point.x - dragState.offsetX)),
         z: Math.max(0, Math.round(point.z - dragState.offsetZ)),
         width: room.width,
         depth: room.depth,
-      });
+      };
+      const placement = roomCollisionState(floor, room.id, candidateRect);
+      setRoomPlacementPreview({ roomId: room.id, ...candidateRect, valid: placement.valid });
     }
 
     if (dragState.kind === 'room-resize') {
-      onResizeRoom(room.id, {
+      const candidateRect = {
         x: room.x,
         z: room.z,
         width: Math.max(2, Math.round(point.x - room.x)),
         depth: Math.max(2, Math.round(point.z - room.z)),
-      });
+      };
+      const placement = roomCollisionState(floor, room.id, candidateRect);
+      setRoomPlacementPreview({ roomId: room.id, ...candidateRect, valid: placement.valid });
     }
   };
 
@@ -146,7 +205,19 @@ const Planner2D = forwardRef(function Planner2D(
       return;
     }
     const point = fromPointer(event, wrapperRef.current);
-    setDropPreview({ ...JSON.parse(catalogPayload), x: point.x, z: point.z });
+    const payload = JSON.parse(catalogPayload);
+    const room = floor.rooms.find((entry) => entry.id === activeRoomId) ?? floor.rooms[0];
+    const catalogEntry = CATALOG_BY_ID[payload.catalogId];
+    const candidate = {
+      id: 'preview',
+      catalogId: payload.catalogId,
+      variantId: catalogEntry.variants.find((variant) => variant.tier === payload.tier)?.id ?? catalogEntry.variants[0].id,
+      rotation: 0,
+      x: point.x - room.x,
+      z: point.z - room.z,
+    };
+    const placement = evaluateItemPlacement(room, candidate);
+    setDropPreview({ ...payload, x: point.x, z: point.z, valid: placement.valid });
   };
 
   const handleDrop = (event) => {
@@ -160,7 +231,22 @@ const Planner2D = forwardRef(function Planner2D(
     }
     const room = floor.rooms.find((entry) => entry.id === activeRoomId) ?? floor.rooms[0];
     const point = fromPointer(event, wrapperRef.current);
-    onAddItem(room.id, JSON.parse(payload).catalogId, JSON.parse(payload).tier, point.x - room.x, point.z - room.z);
+    const parsedPayload = JSON.parse(payload);
+    const catalogEntry = CATALOG_BY_ID[parsedPayload.catalogId];
+    const candidate = {
+      id: 'drop',
+      catalogId: parsedPayload.catalogId,
+      variantId: catalogEntry.variants.find((variant) => variant.tier === parsedPayload.tier)?.id ?? catalogEntry.variants[0].id,
+      rotation: 0,
+      x: point.x - room.x,
+      z: point.z - room.z,
+    };
+    const placement = evaluateItemPlacement(room, candidate);
+    if (!placement.valid) {
+      setDropPreview({ ...parsedPayload, x: point.x, z: point.z, valid: false });
+      return;
+    }
+    onAddItem(room.id, parsedPayload.catalogId, parsedPayload.tier, point.x - room.x, point.z - room.z);
     setDropPreview(null);
   };
 
@@ -178,18 +264,34 @@ const Planner2D = forwardRef(function Planner2D(
         height={bounds.height}
         viewBox={`0 0 ${bounds.width} ${bounds.height}`}
         onPointerMove={handlePointerMove}
-        onPointerUp={() => setDragState(null)}
-        onPointerLeave={() => setDragState(null)}
+        onPointerUp={() => {
+          if (dragState?.kind === 'item' && itemPlacementPreview?.valid) {
+            onMoveItem(itemPlacementPreview.roomId, itemPlacementPreview.itemId, itemPlacementPreview.x, itemPlacementPreview.z);
+          }
+          if ((dragState?.kind === 'room-move' || dragState?.kind === 'room-resize') && roomPlacementPreview?.valid) {
+            onResizeRoom(roomPlacementPreview.roomId, roomPlacementPreview);
+          }
+          setDragState(null);
+          setItemPlacementPreview(null);
+          setRoomPlacementPreview(null);
+        }}
+        onPointerLeave={() => {
+          setDragState(null);
+          setItemPlacementPreview(null);
+          setRoomPlacementPreview(null);
+        }}
       >
         <rect width={bounds.width} height={bounds.height} className="planner-bg" />
         {drawGrid(bounds.width, bounds.height)}
 
         {floor.rooms.map((room) => {
           const selected = selection?.kind === 'room' && selection.roomId === room.id;
-          const roomX = toCanvasX(room.x);
-          const roomZ = toCanvasZ(room.z);
-          const roomWidth = room.width * CELL_SIZE;
-          const roomDepth = room.depth * CELL_SIZE;
+          const previewRoom = roomPlacementPreview?.roomId === room.id ? roomPlacementPreview : null;
+          const renderRoom = previewRoom ? { ...room, ...previewRoom } : room;
+          const roomX = toCanvasX(renderRoom.x);
+          const roomZ = toCanvasZ(renderRoom.z);
+          const roomWidth = renderRoom.width * CELL_SIZE;
+          const roomDepth = renderRoom.depth * CELL_SIZE;
 
           return (
             <g key={room.id} className={room.id === activeRoomId ? 'active-room' : ''}>
@@ -198,10 +300,30 @@ const Planner2D = forwardRef(function Planner2D(
                 y={roomZ}
                 width={roomWidth}
                 height={roomDepth}
-                className={`room-rect ${selected ? 'selected' : ''}`}
+                className={`room-rect ${selected ? 'selected' : ''} ${previewRoom ? (previewRoom.valid ? 'room-valid' : 'room-invalid') : ''}`}
                 onPointerDown={(event) => {
                   event.stopPropagation();
                   onSelectRoom(room.id);
+                  if (readOnly || !pendingPlacement) {
+                    return;
+                  }
+                  const catalogEntry = CATALOG_BY_ID[pendingPlacement.catalogId];
+                  const point = fromPointer(event, svgRef.current);
+                  const localX = clamp(point.x - renderRoom.x, 0.8, renderRoom.width - 0.8);
+                  const localZ = clamp(point.z - renderRoom.z, 0.8, renderRoom.depth - 0.8);
+                  const candidate = {
+                    id: 'tap-placement',
+                    catalogId: pendingPlacement.catalogId,
+                    variantId: catalogEntry.variants.find((variant) => variant.tier === pendingPlacement.tier)?.id ?? catalogEntry.variants[0].id,
+                    rotation: 0,
+                    x: localX,
+                    z: localZ,
+                  };
+                  if (!evaluateItemPlacement(renderRoom, candidate).valid) {
+                    return;
+                  }
+                  onAddItem(room.id, pendingPlacement.catalogId, pendingPlacement.tier, localX, localZ);
+                  onCommitPlacement?.();
                 }}
               />
               {!readOnly && (
@@ -215,7 +337,7 @@ const Planner2D = forwardRef(function Planner2D(
                     onPointerDown={(event) => {
                       event.stopPropagation();
                       const point = fromPointer(event, svgRef.current);
-                      setDragState({ kind: 'room-move', roomId: room.id, offsetX: point.x - room.x, offsetZ: point.z - room.z });
+                      setDragState({ kind: 'room-move', roomId: room.id, offsetX: point.x - renderRoom.x, offsetZ: point.z - renderRoom.z });
                     }}
                   />
                   <rect
@@ -231,23 +353,56 @@ const Planner2D = forwardRef(function Planner2D(
                   />
                 </>
               )}
-              <text x={roomX + roomWidth / 2} y={roomZ + 26} className="room-label-2d">
-                {room.label}
-              </text>
-              <text x={roomX + roomWidth / 2} y={roomZ + 48} className="room-area-2d">
-                {getRoomArea(room)} m²
-              </text>
+              {showRoomMeta && (
+                <>
+                  <text x={roomX + roomWidth / 2} y={roomZ + 26} className="room-label-2d">
+                    {room.label}
+                  </text>
+                  <text x={roomX + roomWidth / 2} y={roomZ + 48} className="room-area-2d">
+                    {getRoomArea(room)} m²
+                  </text>
+                </>
+              )}
+
+              {!readOnly && selection?.roomId === room.id && (
+                <>
+                  {[
+                    { wall: 'north', x: roomX + roomWidth / 2, y: roomZ - 12 },
+                    { wall: 'south', x: roomX + roomWidth / 2, y: roomZ + roomDepth + 12 },
+                    { wall: 'east', x: roomX + roomWidth + 12, y: roomZ + roomDepth / 2 },
+                    { wall: 'west', x: roomX - 12, y: roomZ + roomDepth / 2 },
+                  ].map((wallAction) => (
+                    <g
+                      key={`${room.id}-${wallAction.wall}`}
+                      className="wall-add-control"
+                      transform={`translate(${wallAction.x}, ${wallAction.y})`}
+                      onPointerDown={(event) => {
+                        event.stopPropagation();
+                        onAddRoomFromWall?.(room.id, wallAction.wall);
+                      }}
+                    >
+                      <circle r="12" className="wall-add-circle" />
+                      <text y="4" textAnchor="middle" className="wall-add-plus">
+                        +
+                      </text>
+                    </g>
+                  ))}
+                </>
+              )}
 
               {room.items.map((item) => {
                 const rect = itemRect(item);
                 const selectedItem = selection?.kind === 'item' && selection.itemId === item.id;
-                const itemX = toCanvasX(room.x + item.x) - rect.width / 2;
-                const itemZ = toCanvasZ(room.z + item.z) - rect.depth / 2;
+                const itemX = toCanvasX(renderRoom.x + item.x) - rect.width / 2;
+                const itemZ = toCanvasZ(renderRoom.z + item.z) - rect.depth / 2;
+                const isPreviewTarget = itemPlacementPreview?.itemId === item.id;
+                const renderX = isPreviewTarget ? toCanvasX(room.x + itemPlacementPreview.x) - rect.width / 2 : itemX;
+                const renderZ = isPreviewTarget ? toCanvasZ(room.z + itemPlacementPreview.z) - rect.depth / 2 : itemZ;
 
                 return (
                   <g
                     key={item.id}
-                    transform={`rotate(${(item.rotation * 180) / Math.PI}, ${itemX + rect.width / 2}, ${itemZ + rect.depth / 2})`}
+                    transform={`rotate(${(item.rotation * 180) / Math.PI}, ${renderX + rect.width / 2}, ${renderZ + rect.depth / 2})`}
                     onPointerDown={(event) => {
                       event.stopPropagation();
                       onSelectItem(room.id, item.id);
@@ -259,24 +414,24 @@ const Planner2D = forwardRef(function Planner2D(
                         kind: 'item',
                         roomId: room.id,
                         itemId: item.id,
-                        offsetX: point.x - room.x - item.x,
-                        offsetZ: point.z - room.z - item.z,
+                        offsetX: point.x - renderRoom.x - item.x,
+                        offsetZ: point.z - renderRoom.z - item.z,
                       });
                     }}
                   >
                     <rect
-                      x={itemX}
-                      y={itemZ}
+                      x={renderX}
+                      y={renderZ}
                       width={rect.width}
                       height={rect.depth}
                       rx={12}
-                      className={`item-rect ${selectedItem ? 'selected' : ''}`}
+                      className={`item-rect ${selectedItem ? 'selected' : ''} ${isPreviewTarget ? (itemPlacementPreview.valid ? 'placement-valid' : 'placement-invalid') : ''}`}
                       fill={item.color}
                     />
-                    <text x={itemX + rect.width / 2} y={itemZ + rect.depth / 2 + 4} className="item-label-2d">
+                    <text x={renderX + rect.width / 2} y={renderZ + rect.depth / 2 + 4} className="item-label-2d">
                       {CATALOG_BY_ID[item.catalogId]?.label ?? item.label}
                     </text>
-                    {selectedItem && <rect x={itemX - 4} y={itemZ - 4} width={rect.width + 8} height={rect.depth + 8} rx={16} className="item-outline-2d" />}
+                    {selectedItem && <rect x={renderX - 4} y={renderZ - 4} width={rect.width + 8} height={rect.depth + 8} rx={16} className="item-outline-2d" />}
                   </g>
                 );
               })}
@@ -291,7 +446,7 @@ const Planner2D = forwardRef(function Planner2D(
             width={48}
             height={48}
             rx={14}
-            className="drop-preview"
+            className={`drop-preview ${dropPreview.valid ? 'valid' : 'invalid'}`}
           />
         )}
       </svg>

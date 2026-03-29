@@ -120,6 +120,62 @@ function ensureItemInRoom(room, item) {
   };
 }
 
+function getItemBounds(item) {
+  const footprint = getItemFootprint(item);
+  return {
+    left: item.x - footprint.width / 2,
+    right: item.x + footprint.width / 2,
+    top: item.z - footprint.depth / 2,
+    bottom: item.z + footprint.depth / 2,
+  };
+}
+
+function overlaps(a, b, gap = 0.08) {
+  return a.left < b.right - gap && a.right > b.left + gap && a.top < b.bottom - gap && a.bottom > b.top + gap;
+}
+
+function roomRect(room) {
+  return {
+    left: room.x,
+    right: room.x + room.width,
+    top: room.z,
+    bottom: room.z + room.depth,
+  };
+}
+
+function roomOverlapsAny(nextRoom, siblingRooms, gap = 0.02) {
+  const nextRect = roomRect(nextRoom);
+  return siblingRooms.some((room) => {
+    const siblingRect = roomRect(room);
+    return (
+      nextRect.left < siblingRect.right - gap &&
+      nextRect.right > siblingRect.left + gap &&
+      nextRect.top < siblingRect.bottom - gap &&
+      nextRect.bottom > siblingRect.top + gap
+    );
+  });
+}
+
+export function evaluateItemPlacement(room, candidateItem, ignoreItemId = null) {
+  const candidateBounds = getItemBounds(candidateItem);
+  const insideWalls =
+    candidateBounds.left >= 0 &&
+    candidateBounds.right <= room.width &&
+    candidateBounds.top >= 0 &&
+    candidateBounds.bottom <= room.depth;
+  const hitItem = room.items.some((item) => {
+    if (item.id === ignoreItemId) {
+      return false;
+    }
+    return overlaps(candidateBounds, getItemBounds(item));
+  });
+  return {
+    insideWalls,
+    hitItem,
+    valid: insideWalls && !hitItem,
+  };
+}
+
 function normalizeRoom(room) {
   return {
     ...room,
@@ -174,13 +230,18 @@ export function resizeRoom(state, roomId, nextRect) {
         if (room.id !== roomId) {
           return room;
         }
-        return normalizeRoom({
+        const candidateRoom = normalizeRoom({
           ...room,
           x: snap(Math.max(0, nextRect.x)),
           z: snap(Math.max(0, nextRect.z)),
           width: snap(Math.max(2, nextRect.width)),
           depth: snap(Math.max(2, nextRect.depth)),
         });
+        const siblings = floor.rooms.filter((entry) => entry.id !== room.id);
+        if (roomOverlapsAny(candidateRoom, siblings)) {
+          return room;
+        }
+        return candidateRoom;
       }),
     })),
   }));
@@ -195,18 +256,23 @@ export function moveItem(state, roomId, itemId, x, z) {
         if (room.id !== roomId) {
           return room;
         }
-        return normalizeRoom({
+        const target = room.items.find((item) => item.id === itemId);
+        if (!target || target.locked) {
+          return room;
+        }
+        const candidate = {
+          ...target,
+          x: snap(x),
+          z: snap(z),
+        };
+        const placement = evaluateItemPlacement(room, candidate, itemId);
+        if (!placement.valid) {
+          return room;
+        }
+        return {
           ...room,
-          items: room.items.map((item) =>
-            item.id === itemId && !item.locked
-              ? {
-                  ...item,
-                  x: snap(x),
-                  z: snap(z),
-                }
-              : item
-          ),
-        });
+          items: room.items.map((item) => (item.id === itemId ? candidate : item)),
+        };
       }),
     })),
   }));
@@ -223,7 +289,7 @@ export function addItemToRoom(state, roomId, catalogId, tier = 'Standard', x = 1
           return room;
         }
 
-        const item = {
+        const item = ensureItemInRoom(room, {
           id: `${catalogId}-${Date.now()}`,
           catalogId,
           variantId: catalogItem.variants.find((variantEntry) => variantEntry.tier === tier)?.id ?? catalogItem.variants[1].id,
@@ -237,13 +303,77 @@ export function addItemToRoom(state, roomId, catalogId, tier = 'Standard', x = 1
           rotation: 0,
           locked: false,
           animation: { kind: 'drop', startedAt: Date.now() },
-        };
-
-        return normalizeRoom({
-          ...room,
-          items: [...room.items, item],
         });
+
+        const directPlacement = evaluateItemPlacement(room, item);
+        if (directPlacement.valid) {
+          return {
+            ...room,
+            items: [...room.items, item],
+          };
+        }
+
+        for (let scanZ = 0.8; scanZ <= room.depth - 0.8; scanZ += 0.4) {
+          for (let scanX = 0.8; scanX <= room.width - 0.8; scanX += 0.4) {
+            const scannedCandidate = ensureItemInRoom(room, { ...item, x: scanX, z: scanZ });
+            if (evaluateItemPlacement(room, scannedCandidate).valid) {
+              return {
+                ...room,
+                items: [...room.items, scannedCandidate],
+              };
+            }
+          }
+        }
+
+        return room;
       }),
+    })),
+  }));
+}
+
+export function renameRoom(state, roomId, label) {
+  const nextLabel = `${label ?? ''}`.trim();
+  if (!nextLabel) {
+    return state;
+  }
+  return updateVariant(state, (variant) => ({
+    ...variant,
+    floors: variant.floors.map((floor) => ({
+      ...floor,
+      rooms: floor.rooms.map((room) => (room.id === roomId ? { ...room, label: nextLabel } : room)),
+    })),
+  }));
+}
+
+export function addRoomFromWall(state, roomId, wall) {
+  return updateVariant(state, (variant) => ({
+    ...variant,
+    floors: variant.floors.map((floor) => ({
+      ...floor,
+      rooms: (() => {
+        const sourceRoom = floor.rooms.find((room) => room.id === roomId);
+        if (!sourceRoom) {
+          return floor.rooms;
+        }
+        const newRoom = {
+          ...deepClone(sourceRoom),
+          id: `room-${Date.now()}`,
+          label: `${sourceRoom.label} +`,
+          items: [],
+          openings: { doors: [], windows: [] },
+        };
+        if (wall === 'east') newRoom.x = snap(sourceRoom.x + sourceRoom.width);
+        if (wall === 'west') newRoom.x = snap(sourceRoom.x - sourceRoom.width);
+        if (wall === 'south') newRoom.z = snap(sourceRoom.z + sourceRoom.depth);
+        if (wall === 'north') newRoom.z = snap(sourceRoom.z - sourceRoom.depth);
+        newRoom.x = Math.max(0, newRoom.x);
+        newRoom.z = Math.max(0, newRoom.z);
+
+        if (roomOverlapsAny(newRoom, floor.rooms)) {
+          return floor.rooms;
+        }
+        return [...floor.rooms, newRoom];
+      })(),
     })),
   }));
 }
