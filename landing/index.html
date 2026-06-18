@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoomForge — Планируй интерьер в браузере</title>
+  <meta name="description" content="RoomForge: браузерный планировщик интерьера с 2D-редактором, изометрическим просмотром и AI-генерацией планировок.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a href="#" class="logo">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="10" width="10" height="16" rx="2" fill="currentColor" opacity="0.9"/>
+          <rect x="14" y="2" width="12" height="24" rx="2" fill="currentColor" opacity="0.6"/>
+        </svg>
+        <span>RoomForge</span>
+      </a>
+      <nav class="nav">
+        <a href="#how-it-works">Как работает</a>
+        <a href="#features">Возможности</a>
+        <a href="#templates">Шаблоны</a>
+        <a href="#pricing">Тарифы</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <a href="#try" class="btn btn-primary btn-sm">Попробовать бесплатно</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="container hero-inner">
+        <div class="hero-text">
+          <span class="badge">v0.1.0 — уже доступно</span>
+          <h1>Планируй интерьер<br>прямо в браузере</h1>
+          <p class="hero-subtitle">
+            RoomForge объединяет 2D-редактор, изометрический просмотр и AI-генерацию планировок в один инструмент. Без установки, без регистрации.
+          </p>
+          <div class="hero-actions">
+            <a href="#try" class="btn btn-primary btn-lg">Начать проект</a>
+            <a href="#how-it-works" class="btn btn-ghost btn-lg">Посмотреть, как работает</a>
+          </div>
+          <div class="hero-stats">
+            <div>
+              <strong>8</strong>
+              <span>готовых шаблонов</span>
+            </div>
+            <div>
+              <strong>2D + 3D</strong>
+              <span>в одном редакторе</span>
+            </div>
+            <div>
+              <strong>AI</strong>
+              <span>генерация планировок</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="mockup">
+            <div class="mockup-topbar">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+              <span class="mockup-title">RoomForge — 2D Planner</span>
+            </div>
+            <div class="mockup-body">
+              <div class="mockup-sidebar">
+                <div class="mockup-nav-item active">Studio</div>
+                <div class="mockup-nav-item">1-Bedroom</div>
+                <div class="mockup-nav-item">2-Bedroom</div>
+                <div class="mockup-nav-item">Office</div>
+              </div>
+              <div class="mockup-canvas">
+                <div class="room room-main"></div>
+                <div class="room room-kitchen"></div>
+                <div class="room room-bath"></div>
+                <div class="furniture sofa"></div>
+                <div class="furniture table"></div>
+                <div class="furniture bed"></div>
+                <div class="grid"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="section section-darker" id="how-it-works">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-label">Как это работает</span>
+          <h2>От идеи до планировки за три шага</h2>
+          <p>Не нужно учить CAD или скачивать тяжёлые программы. Всё происходит в браузере.</p>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            </div>
+            <h3>Выберите шаблон</h3>
+            <p>Studio, 1-2 комнаты, дом 80–120 м², офис или кухня-гостиная. Начните с готовой базы и редактируйте под себя.</p>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+            <h3>Расставьте мебель</h3>
+            <p>Библиотека с категориями, пять вариантов каждого предмета, поиск и рекомендации под конкретную комнату.</p>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </div>
+            <h3>Смотрите и презентуйте</h3>
+            <p>Переключайтесь между 2D и изометрией, меняйте стиль, освещение и экспортируйте на презентацию.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section" id="features">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-label">Возможности</span>
+          <h2>Всё, что нужно для планировки</h2>
+          <p>Инструменты, которые обычно разбросаны по трём разным приложениям — в одном месте.</p>
+        </div>
+        <div class="features">
+          <div class="feature">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            </div>
+            <h3>2D-планировщик</h3>
+            <p>Метровая сетка, drag-and-drop, изменение размеров комнат, явные действия со стенами — двери, окна, соседние помещения.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+            <h3>Изометрический вид</h3>
+            <p>Разрезной режим для наглядной презентации. Один клик — и планировка превращается в макет, который можно показать заказчику.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <h3>Библиотека мебели</h3>
+            <p>Категории, 5 вариантов каждого предмета (Compact, Standard, Premium, Minimal, Statement), смена цвета, замена, дублирование, блокировка.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+            </div>
+            <h3>AI-генерация</h3>
+            <p>Опишите квартиру словами — RoomForge построит планировку и расставит стартовую мебель через OpenAI API прямо в браузере.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <h3>6 стилей и 5 сцен освещения</h3>
+            <p>Minimal, Scandinavian, Japandi, Loft, Warm Neutral, Modern Classic. День, вечер, тёплый и холодный свет, ночь.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <h3>Валидация планировки</h3>
+            <p>Проверка пересечений, статус по комнатам, навигация к проблемам. Не оставляйте ошибки незамеченными.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Templates -->
+    <section class="section section-darker" id="templates">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-label">Шаблоны</span>
+          <h2>Начните с готового проекта</h2>
+          <p>8 шаблонов для самых популярных задач — от студии до загородного дома.</p>
+        </div>
+        <div class="templates">
+          <div class="template-card">
+            <div class="template-preview">
+              <div class="mini-room" data-rooms="1"></div>
+            </div>
+            <h4>Studio</h4>
+            <span>~30–40 м²</span>
+          </div>
+          <div class="template-card">
+            <div class="template-preview">
+              <div class="mini-room" data-rooms="2"></div>
+            </div>
+            <h4>1-Bedroom</h4>
+            <span>~45–55 м²</span>
+          </div>
+          <div class="template-card">
+            <div class="template-preview">
+              <div class="mini-room" data-rooms="3"></div>
+            </div>
+            <h4>2-Bedroom</h4>
+            <span>~60–75 м²</span>
+          </div>
+          <div class="template-card">
+            <div class="template-preview">
+              <div class="mini-room" data-rooms="4"></div>
+            </div>
+            <h4>House 80 м²</h4>
+            <span>~80 м²</span>
+          </div>
+          <div class="template-card">
+            <div class="template-preview">
+              <div class="mini-room" data-rooms="5"></div>
+            </div>
+            <h4>House 120 м²</h4>
+            <span>~120 м²</span>
+          </div>
+          <div class="template-card">
+            <div class="template-preview">
+              <div class="mini-room" data-rooms="3"></div>
+            </div>
+            <h4>Office</h4>
+            <span>~50–80 м²</span>
+          </div>
+          <div class="template-card">
+            <div class="template-preview">
+              <div class="mini-room" data-rooms="2"></div>
+            </div>
+            <h4>Bedroom</h4>
+            <span>~15–25 м²</span>
+          </div>
+          <div class="template-card">
+            <div class="template-preview">
+              <div class="mini-room" data-rooms="2"></div>
+            </div>
+            <h4>Kitchen-Living</h4>
+            <span>~25–40 м²</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="section section-darker" id="pricing">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-label">Тарифы</span>
+          <h2>Выберите подходящий план</h2>
+          <p>Начните бесплатно и расширяйте возможности по мере роста проектов.</p>
+        </div>
+        <div class="pricing">
+          <div class="pricing-card">
+            <div class="pricing-header">
+              <h4>Free</h4>
+              <div class="pricing-price">0 ₽</div>
+              <span class="pricing-period">/ месяц</span>
+            </div>
+            <ul class="pricing-features">
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 1 проект</li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Базовые шаблоны</li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 2D-редактор</li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Изометрический вид</li>
+              <li class="disabled"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Экспорт проектов</li>
+              <li class="disabled"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> AI-генерация</li>
+            </ul>
+            <a href="#try" class="btn btn-ghost btn-lg">Начать бесплатно</a>
+          </div>
+
+          <div class="pricing-card pricing-popular">
+            <div class="pricing-badge">Популярный</div>
+            <div class="pricing-header">
+              <h4>Pro</h4>
+              <div class="pricing-price">290 ₽</div>
+              <span class="pricing-period">/ месяц</span>
+            </div>
+            <ul class="pricing-features">
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 5 проектов</li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Все шаблоны</li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 2D + изометрия</li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Экспорт PNG / PDF</li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> AI-генерация планировок</li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Приоритетная поддержка</li>
+            </ul>
+            <a href="#try" class="btn btn-primary btn-lg">Выбрать Pro</a>
+          </div>
+
+          <div class="pricing-card">
+            <div class="pricing-header">
+              <h4>Team</h4>
+              <div class="pricing-price">890 ₽</div>
+              <span class="pricing-period">/ месяц</span>
+            </div>
+            <ul class="pricing-features">
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Безлимитные проекты</li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Совместная работа</li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Все шаблоны и стили</li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Экспорт PNG / PDF / SVG</li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> AI-генерация без ограничений</li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Персональный менеджер</li>
+            </ul>
+            <a href="#try" class="btn btn-ghost btn-lg">Выбрать Team</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" id="faq">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-label">FAQ</span>
+          <h2>Частые вопросы</h2>
+          <p>Ответы на самые популярные вопросы о RoomForge.</p>
+        </div>
+        <div class="faq-list">
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Что такое RoomForge?</span>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-answer">
+              <p>RoomForge — это браузерный планировщик интерьера с 2D-редактором, изометрическим просмотром и AI-генерацией планировок. Работает без установки и регистрации: откройте сайт и начните проектировать.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Как начать?</span>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-answer">
+              <p>Выберите готовый шаблон (Studio, 1-2 комнаты, офис) или создайте планировку с помощью AI. Затем расставьте мебель из библиотеки и переключайтесь между 2D и изометрическим видом.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Можно ли экспортировать проекты?</span>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-answer">
+              <p>Да. На тарифе Pro доступен экспорт в PNG и PDF, на Team — дополнительно SVG. На бесплатном тарифе экспорт недоступен, но вы можете делиться ссылкой на проект.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Какие шаблоны доступны?</span>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-answer">
+              <p>8 шаблонов: Studio (~30–40 м²), 1-Bedroom (~45–55 м²), 2-Bedroom (~60–75 м²), House 80 м², House 120 м², Office, Bedroom и Kitchen-Living. На тарифе Free — базовые шаблоны, на Pro и Team — все.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Как отменить подписку?</span>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-answer">
+              <p>Подписку можно отменить в любой момент в личном кабинете. Доступ к платным функциям сохраняется до конца оплаченного периода. После этого проекты остаются в режиме просмотра.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section cta" id="try">
+      <div class="container cta-inner">
+        <h2>Готовы спланировать свой интерьер?</h2>
+        <p>Запустите RoomForge прямо сейчас — никакой установки, никаких подписок. Просто откройте и начните.</p>
+        <div class="cta-actions">
+          <code class="cli-snippet">npx roomforge</code>
+          <a href="#" class="btn btn-primary btn-lg">Открыть в браузере</a>
+        </div>
+        <div class="cta-hint">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          Достаточно Node.js и npm — всё остальное RoomForge сделает сам.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <svg width="20" height="20" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="10" width="10" height="16" rx="2" fill="currentColor" opacity="0.9"/>
+          <rect x="14" y="2" width="12" height="24" rx="2" fill="currentColor" opacity="0.6"/>
+        </svg>
+        <span>RoomForge</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/sponsors">Поддержать проект</a>
+        <a href="#">GitHub</a>
+        <a href="#">Документация</a>
+      </div>
+      <div class="footer-copy">
+        © RoomForge. MIT License.
+      </div>
+    </div>
+  </footer>
+  <script>
+    document.querySelectorAll('.faq-question').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.faq-item');
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+        if (!isOpen) item.classList.add('open');
+      });
+    });
+  </script>
+</body>
+</html>
